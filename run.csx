@@ -5,8 +5,6 @@ using Microsoft.Azure.EventGrid.Models;
 using System.Data.SqlClient;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
-using Microsoft.Azure.Search;
-using Microsoft.Azure.Search.Models;
 
 /// <summary>Handler for Blob change grid events that will synchronize creations and deletions with an SQL database</summary>
 /// <param name="tEvent">Blob storage event</param>
@@ -44,12 +42,8 @@ public static void Run( EventGridEvent tEvent, ILogger tLogger )
 					// Create
 					if ( tempIsCreated )
 					{
-						// Randomize categories (temporary)
-						string[] tempCategories = new string[]{ "army", "navy", "airforce" };
-						Random tempRandom = new Random();
-
 						// SQL
-						tempCommand = new SqlCommand( "INSERT INTO docs VALUES ( '[\"" + tempCategories[ tempRandom.Next( 3 ) ] + "\"]', '" + DateTime.Now.ToString() + "' ); SELECT CAST( SCOPE_IDENTITY() AS int );", tempConnection );
+						tempCommand = new SqlCommand( "INSERT INTO docs VALUES (); SELECT CAST( SCOPE_IDENTITY() AS int );", tempConnection ); // MODIFY THIS STATEMENT
 						string tempIndex = ( (int)tempCommand.ExecuteScalar() ).ToString();
 						tLogger.LogInformation( "Created new doc row with id: " + tempIndex );
 
@@ -60,23 +54,9 @@ public static void Run( EventGridEvent tEvent, ILogger tLogger )
 					// Delete
 					else
 					{
-						// SQL
 						tempCommand = new SqlCommand( "DELETE FROM docs WHERE id=" + tempID, tempConnection );
 						tempCommand.ExecuteNonQuery();
 						tLogger.LogInformation( "Removed doc row with id: " + tempID );
-
-						// Remove from index
-						SearchServiceClient tempServiceClient = new SearchServiceClient( Environment.GetEnvironmentVariable( "search_name" ), new SearchCredentials( Environment.GetEnvironmentVariable( "search_admin_key" ) ) );
-						ISearchIndexClient tempIndexClient = tempServiceClient.Indexes.GetClient( Environment.GetEnvironmentVariable( "search_index_name" ) );
-
-						try
-						{
-							tempIndexClient.Documents.Index( IndexBatch.Delete( "id", new string[] { tempID } ) );
-						}
-						catch ( IndexBatchException tError )
-						{
-							tLogger.LogInformation( "Failed to index some of the documents: {0}", String.Join( ", ", tError.IndexingResults.Where( tResult => !tResult.Succeeded ).Select( tResult => tResult.Key ) ) );
-						}
 					}
 				}
 			}

@@ -20,7 +20,7 @@ public static void Run( EventGridEvent tEvent, ILogger tLogger )
 	if ( tempContainerStart <= tEvent.Subject.Length )
 	{
 		// Grab container
-		int tempContainerEnd = tEvent.Subject.IndexOf( "/blobs/" );
+		int tempContainerEnd = tEvent.Subject.IndexOf( "/blobs/", tempContainerStart );
 		if ( tempContainerEnd >= 0 )
 		{
 			CloudStorageAccount tempAccount = CloudStorageAccount.Parse( Environment.GetEnvironmentVariable( "AzureWebJobsStorage" ) );

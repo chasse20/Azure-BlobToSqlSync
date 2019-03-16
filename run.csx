@@ -54,7 +54,7 @@ public static void Run( EventGridEvent tEvent, ILogger tLogger )
 					// Delete
 					else
 					{
-						tempCommand = new SqlCommand( "DELETE FROM docs WHERE id=" + tempID, tempConnection );
+						tempCommand = new SqlCommand( "DELETE FROM docs WHERE id=" + tempID, tempConnection ); // MODIFY THIS STATEMENT WITH TABLE NAME
 						tempCommand.ExecuteNonQuery();
 						tLogger.LogInformation( "Removed doc row with id: " + tempID );
 					}
